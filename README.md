@@ -31,8 +31,9 @@ You run multiple OpenCode agents simultaneously via [oh-my-openagent](https://gi
 
 - [Bun](https://bun.sh) v1.0 or later
 - oh-my-openagent configured at `~/.config/opencode/oh-my-opencode.json`
+- [tokentop](https://github.com/tokentopapp/tokentop) *(optional but recommended — see below)*
 
-### Install
+### Install omoctl
 
 ```bash
 git clone https://github.com/Silktex/omo-cli.git
@@ -52,6 +53,37 @@ omoctl --help
 omoctl config validate
 ```
 
+### Install tokentop (optional)
+
+tokentop is a terminal token-usage monitor for 10+ providers (Anthropic, OpenAI, Gemini, and more). omoctl and tokentop are complementary — tokentop covers all providers broadly, omoctl covers Alibaba/Minimax/Z.AI deeply with role-level control.
+
+```bash
+git clone https://github.com/tokentopapp/tokentop.git
+cd tokentop
+bun install
+bun link
+
+# Create global binary
+ln -sf "$(pwd)/src/index.ts" ~/.bun/bin/tokentop
+chmod +x src/index.ts
+```
+
+Or if tokentop has a published release:
+
+```bash
+bun install -g tokentop
+```
+
+**Shared database:** If you point both tools at the same SQLite file, omoctl can read tokentop's session records to avoid double-polling. Set in `~/.config/omoctl/config.json`:
+
+```jsonc
+{
+  "database": "~/.local/share/tokentop/data.db"
+}
+```
+
+omoctl's schema is a superset of tokentop's — it adds `agent_role` and `agent_name` columns to the `sessions` table without breaking tokentop reads.
+
 ### Environment variables
 
 ```bash
@@ -61,6 +93,21 @@ export ZAI_API_KEY="..."
 ```
 
 omoctl reads these at startup. No separate config file required for basic use.
+
+### Tool comparison
+
+| Capability | omoctl | tokentop |
+|-----------|--------|----------|
+| Alibaba / Minimax / Z.AI quota | ✓ | — |
+| Anthropic / OpenAI / Gemini monitoring | — | ✓ |
+| oh-my-openagent role → model switching | ✓ | — |
+| Fallback proxy monitoring | ✓ | — |
+| Budget alerts (all providers) | — | ✓ |
+| Historical cost trends (all providers) | — | ✓ |
+| Interactive TUI dashboard | ✓ | ✓ |
+| Web UI | ✓ | — |
+
+Run them side by side — they share a SQLite schema and don't conflict.
 
 ---
 
